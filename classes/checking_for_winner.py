@@ -1,53 +1,46 @@
 
 class Graph:
-    def __init__(self,array,color):
-        self.array = [[1 if array[i][j].occupated_by == 'Green' else 2 if array[i][j].occupated_by == 'Blue' else 0 for j in range(11)] for i in range(11)]
-        #self.array = array
-        #print(self.array)
-        #print(self.array[0][1])
-        self.neighbors = []
-        self.check_list = []
+    def __init__(self, board, color):
+        self.board = [[1 if cell.occupated_by == 'Green' else 2 if cell.occupated_by == 'Blue' else 0 for cell in row] for row in board]
         self.color = color
-        self.already_checked = []
-        for j in range(0,11):
-            self.check_list.append((0,j))
-        self.end_list = []
-        for j in range(0,11):
-            self.end_list.append((10,j))
+        if color == 1:
+            self.check_positions = [(0, j) for j in range(11)]
+            self.end_positions = [(10, j) for j in range(11)]
+        elif color == 2:
+            self.check_positions = [(i, 0) for i in range(11)]
+            self.end_positions = [(i, 10) for i in range(11)]
 
-        if self.is_winner(self.check_list):
-            print('Winner finded')
+        if self.is_winner(self.check_positions):
+            print(f'Winner found {self.color}')
 
-
-        pass
-
-    def get_neighbors(self, i, j, color, already_checked):
+    def get_neighbors(self, i, j, color, visited):
         neighbors = []
-        potential_neighbors = [(i, j+1), (i, j-1), (i+1,j-1), (i+1, j), (i-1,j),(i-1,j+1)]
-        for n,m in potential_neighbors:
-            if n < 0 or m < 0 or m > 10 or n > 10:
-                continue
-            if (self.array[n][m] == color
-                and ((n, m) not in already_checked)):
-                neighbors.append((n,m))
-                if (n, m) in self.end_list:
-                    return True,neighbors
+        potential_neighbors = [(i, j + 1), (i, j - 1), (i + 1, j - 1), (i + 1, j), (i - 1, j), (i - 1, j + 1)]
+
+        for n, m in potential_neighbors:
+            if 0 <= n <= 10 and 0 <= m <= 10 and self.board[n][m] == color and (n, m) not in visited:
+                neighbors.append((n, m))
+                if (n, m) in self.end_positions:
+                    return True, neighbors
 
         return False, neighbors
 
-    def is_winner(self,check_list):
+    def is_winner(self, check_positions):
+        visited = []
+        while check_positions:
+            depth_checking_positions = []
 
-        already_checked = []
-        while check_list:
+            for i, j in check_positions:
+                visited.append((i, j))
+                end, neighbors = self.get_neighbors(i, j, self.color, visited)
+                depth_checking_positions.extend(neighbors)
 
-            depth_checking_list = []
-            for i, j in check_list:
-                already_checked.append((i, j))
-                end, neighbors = self.get_neighbors(i, j, self.color, already_checked)
-                depth_checking_list = depth_checking_list + neighbors
                 if end:
                     return True
-            check_list = depth_checking_list
+
+            check_positions = depth_checking_positions
+
+
 
 
 def exemple():
