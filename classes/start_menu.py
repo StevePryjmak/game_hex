@@ -1,6 +1,6 @@
 import pygame
-from .constants import WIDTH,HEIGHT
-from .button import Button
+from classes.constants import WIDTH, HEIGHT
+from classes.button import Button
 
 
 class Menu:
@@ -13,4 +13,3 @@ class Menu:
         win.blit(background_image, (0, 0))
         self.start_button.draw(win)
         pygame.display.flip()
-

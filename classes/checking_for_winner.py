@@ -1,7 +1,10 @@
 
 class Graph:
     def __init__(self, board, color):
-        self.board = [[1 if cell.occupated_by == 'Yellow' else 2 if cell.occupated_by == 'Blue' else 0 for cell in row] for row in board]
+        self.board = [
+            [1 if cell.occupated_by == 'Yellow' else 2 if cell.occupated_by == 'Blue' else 0 for cell in row]
+            for row in board
+        ]
         self.color = color
         self.winner = False
         if color == 1:
