@@ -31,7 +31,6 @@ class Game:
 
         if self.game_started and not self.game_ended:
             i, j = self.board.get_hex_cords(pos)
-            print(i, j)
             if i == -1:
                 return
 
@@ -55,7 +54,5 @@ class Game:
                         cell.draw(self.win)
                     pygame.display.flip()
                     time.sleep(0.35)
-
-
 
         pygame.display.flip()

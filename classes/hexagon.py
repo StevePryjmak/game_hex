@@ -32,7 +32,9 @@ class Hexagon:
         is_odd = False
 
         for (x1, y1), (x2, y2) in zip(points, points[1:] + [points[0]]):
-            if (y1 < pos[1] and y2 >= pos[1] or y2 < pos[1] and y1 >= pos[1]) and (x1 <= pos[0] or x2 <= pos[0]): #ray casting algorithm
+            if ((y1 < pos[1] and y2 >= pos[1]) or (y2 < pos[1] and y1 >= pos[1]) and
+                    (x1 <= pos[0] or x2 <= pos[0])):
+                # ray casting algorithm
                 if x1 + (pos[1] - y1) / (y2 - y1) * (x2 - x1) < pos[0]:
                     is_odd = not is_odd
 
@@ -41,7 +43,7 @@ class Hexagon:
         return is_odd
 
 
-def exemple_hexagon():
+def example_hexagon():
     import sys
     pygame.init()
     win = pygame.display.set_mode((800, 600))
@@ -68,4 +70,4 @@ def exemple_hexagon():
 
 
 if __name__ == "__main__":
-    exemple_hexagon()
+    example_hexagon()

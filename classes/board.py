@@ -58,9 +58,13 @@ class Board:
                 column_distance = (position[0] - (hex_cell.center[0] - hex_cell.height)) / (2 * self.size)
 
                 if column_distance < 0 or column_distance > 11:
-                    return product([], [])
+                    return -1, False
                 possible_columns = (
                                        [int(column_distance) - 1] if 0 <= int(column_distance) - 1 <= 10 else []
                                    ) + [int(column_distance)] if 0 <= int(column_distance) <= 10 else []
-                return product(possible_rows, possible_columns)
-        return product([], [])
+
+                for i, j in product(possible_rows, possible_columns):
+                    if self.hex_cells[i][j].clicked(position):
+                        return i, j
+                return -1, False
+        return -1, False
