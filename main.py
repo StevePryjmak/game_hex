@@ -1,6 +1,6 @@
 import pygame
 from classes.constants import WIDTH, HEIGHT
-from classes.game import Game
+from classes.game import Game, GameBot
 
 
 pygame.init()

@@ -3,6 +3,7 @@ from classes.hexagon import Hexagon
 from classes.constants import WIDTH, HEIGHT
 import math
 from itertools import product
+from classes.button import Button
 
 
 class Board:
@@ -11,6 +12,7 @@ class Board:
         self.size = ((min(HEIGHT, WIDTH) * 0.9) / math.cos(math.radians(30))) / 22.5
         self.first_hex_center_x, self.first_hex_center_y = self.calculate_first_hexagon_center()
         self.polygon_points = self.calculate_polygon_points()
+        self.back_button = Button((1, 50, 32), 0, HEIGHT*0.9, WIDTH*0.1, HEIGHT*0.1, 'Back')
 
     def calculate_first_hexagon_center(self):
         center_x = WIDTH / 2 - 15.5 * self.size
@@ -32,6 +34,8 @@ class Board:
         return polygon_points
 
     def draw_board(self, win):
+        win.fill((0, 0, 0))
+        self.back_button.draw(win)
         pygame.draw.polygon(win, (0, 0, 255), self.polygon_points, 0)
         self.polygon_points[-1], self.polygon_points[-2] = self.polygon_points[-2], self.polygon_points[-1]
         pygame.draw.polygon(win, (255, 255, 0), self.polygon_points, 0)
@@ -43,7 +47,7 @@ class Board:
                 center_x = self.first_hex_center_x + (2 * i + j) * self.size
                 basic_hex = Hexagon((center_x, center_y), self.size, (128, 128, 128))
                 basic_hex.draw(win)
-                basic_hex = Hexagon((center_x, center_y), self.size*0.85, (255, 255, 255))
+                basic_hex = Hexagon((center_x, center_y), self.size*0.95, (255, 255, 255))
                 iterable_list.append(basic_hex)
                 basic_hex.draw(win)
 
@@ -57,8 +61,6 @@ class Board:
                 possible_rows = ([row_index + 1] if row_index + 1 < 11 else []) + [row_index]
                 column_distance = (position[0] - (hex_cell.center[0] - hex_cell.height)) / (2 * self.size)
 
-                if column_distance < 0 or column_distance > 11:
-                    return -1, False
                 possible_columns = (
                                        [int(column_distance) - 1] if 0 <= int(column_distance) - 1 <= 10 else []
                                    ) + [int(column_distance)] if 0 <= int(column_distance) <= 10 else []

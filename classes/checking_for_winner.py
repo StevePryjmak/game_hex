@@ -2,7 +2,7 @@
 class Graph:
     def __init__(self, board, color):
         self.board = [
-            [1 if cell.occupated_by == 'Yellow' else 2 if cell.occupated_by == 'Blue' else 0 for cell in row]
+            [1 if cell.owner == 'Yellow' else 2 if cell.owner == 'Blue' else 0 for cell in row]
             for row in board
         ]
         self.color = color
@@ -16,19 +16,17 @@ class Graph:
 
         if self.is_winner(self.check_positions):
             self.winner, path = True, [self.is_winner(self.check_positions)[1]]
-            print(path)
             self.wining_cluster = self.is_winner(path, True)
-
             print(f'Winner found {self.color}')
 
-    def get_neighbors(self, i, j, color, visited):
+    def get_neighbors(self, i, j, color, visited, move_through_all=False):
         neighbors = []
         potential_neighbors = [(i, j + 1), (i, j - 1), (i + 1, j - 1), (i + 1, j), (i - 1, j), (i - 1, j + 1)]
 
         for n, m in potential_neighbors:
             if 0 <= n <= 10 and 0 <= m <= 10 and self.board[n][m] == color and (n, m) not in visited:
                 neighbors.append((n, m))
-                if (n, m) in self.end_positions:
+                if (n, m) in self.end_positions and not move_through_all:
                     return True, neighbors, (n, m)
 
         return False, neighbors, None
@@ -42,13 +40,12 @@ class Graph:
                 if self.board[i][j] != self.color:
                     continue
                 visited.append((i, j))
-                end, neighbors, path = self.get_neighbors(i, j, self.color, visited)
+                end, neighbors, path = self.get_neighbors(i, j, self.color, visited, move_through_all)
                 depth_checking_positions.extend(neighbors)
 
                 if end and not move_through_all:
                     return True, path
-
-            check_positions = depth_checking_positions
+            check_positions = set(depth_checking_positions)
         if move_through_all:
             return visited
 
