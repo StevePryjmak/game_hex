@@ -9,17 +9,20 @@ import random
 class Game:
     def __init__(self, win):
         self.win = win
-        self.menu = Menu()
-        self.start_menu()
-        self.start_game = False
-        self.board = Board()
+#        self.menu = Menu()
+#        self.start_menu()
+#        self.start_game = False
+        self.board = Board(self.revert_move)
         self.player1_turn = True
-        self.game_started = False
+#        self.game_started = False
         self.game_ended = False
         self.moves = []
+        self.start_game()
 
-    def start_menu(self):
-        self.menu.draw_menu(self.win)
+    def start_game(self):
+        self.board.draw_board(self.win)
+#        self.game_started = True
+        pass
 
     def update_mouse(self, pos):
         # Check if the start button is clicked and initiate the game.
@@ -27,18 +30,18 @@ class Game:
         # Consider designing a menu system where the game initializes when the start button is clicked,
         # and add separate buttons for different game modes
 
-        self.start_game = self.menu.start_button.mouse(pos)
-        if self.start_game:
-            self.menu.start_button.toggle_state()
-            self.board.draw_board(self.win)
-            pygame.display.flip()
-            self.start_game = False
-            self.game_started = True
-            return False
+        # self.start_game = self.menu.start_button.clicked(pos)
+        # if self.start_game:
+        #     self.menu.start_button.toggle_state()
+        #     self.board.draw_board(self.win)
+        #     pygame.display.flip()
+        #     self.start_game = False
+        #     self.game_started = True
+        #     return False
 
         self.revert_move(pos)
 
-        if self.game_started and not self.game_ended:
+        if not self.game_ended:  # and self.game_started
 
             i, j = self.board.get_hex_cords(pos)
             if i == -1:
@@ -63,7 +66,7 @@ class Game:
         pygame.display.flip()
 
     def revert_move(self, pos):
-        if not self.board.back_button.mouse(pos) or not self.moves:
+        if not self.board.back_button.rect.collidepoint(pos) or not self.moves:
             return False, None
         self.game_ended = False  # I know what I must to add, just remainder
         i, j = self.moves[-1]

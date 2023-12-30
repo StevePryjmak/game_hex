@@ -7,12 +7,12 @@ from classes.button import Button
 
 
 class Board:
-    def __init__(self):
+    def __init__(self,revert_move):
         self.hex_cells = []
         self.size = ((min(HEIGHT, WIDTH) * 0.9) / math.cos(math.radians(30))) / 22.5
         self.first_hex_center_x, self.first_hex_center_y = self.calculate_first_hexagon_center()
         self.polygon_points = self.calculate_polygon_points()
-        self.back_button = Button((1, 50, 32), 0, HEIGHT*0.9, WIDTH*0.1, HEIGHT*0.1, 'Back')
+        self.back_button = Button((0, HEIGHT*0.9), WIDTH*0.1, HEIGHT*0.1, 'Back', revert_move)
 
     def calculate_first_hexagon_center(self):
         center_x = WIDTH / 2 - 15.5 * self.size
