@@ -5,8 +5,9 @@ from classes.constants import BTN_COLOR, HOVER_COLOR, FONT, TEXT_COLOR
 def nothing():
     return
 
+
 class Button:
-    def __init__(self, pos, width, height, text='', funk=nothing, arguments=-1, color=BTN_COLOR):
+    def __init__(self, pos, width, height, text='', funk=nothing, arguments=-1, color=BTN_COLOR, border_radius=-1):
         self.color = color
         self.x, self.y = pos
         self.width = width
@@ -14,7 +15,7 @@ class Button:
         self.text = text
 #        self.enabled = enabled
         self.rect = pygame.Rect(self.x, self.y, self.width, self.height)
-        self.border_radius = int(min(width, height)/2)
+        self.border_radius = int(min(width, height)/2 if border_radius == -1 else border_radius)
         self.func_to_execute_after_button_was_clicked = funk
         self.funk_arguments = arguments
 

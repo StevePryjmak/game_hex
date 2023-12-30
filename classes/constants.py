@@ -2,7 +2,7 @@ import pygame
 # Window constants
 pygame.init()
 info = pygame.display.Info()
-WIDTH, HEIGHT = info.current_w, info.current_h-70
+WIDTH, HEIGHT = info.current_w, info.current_h
 BG_COLOR = (50, 50, 50)
 
 

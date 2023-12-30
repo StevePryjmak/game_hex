@@ -91,6 +91,7 @@ class Game:
             time.sleep(0.35)
 
 
+
 class GameBot(Game):
     def __init__(self, win):
         super().__init__(win)
