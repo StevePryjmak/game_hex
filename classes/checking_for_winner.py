@@ -1,8 +1,10 @@
+from classes.constants import FIRST_PLAYER_COLOR, SECOND_PLAYER_COLOR
+
 
 class Graph:
     def __init__(self, board, color):
         self.board = [
-            [1 if cell.owner == 'Yellow' else 2 if cell.owner == 'Blue' else 0 for cell in row]
+            [1 if cell.owner == FIRST_PLAYER_COLOR[1] else 2 if cell.owner == SECOND_PLAYER_COLOR[1] else 0 for cell in row]
             for row in board
         ]
         self.color = color

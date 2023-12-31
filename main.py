@@ -2,16 +2,16 @@ import time
 
 import pygame
 import sys
-from classes.constants import WIDTH, HEIGHT, BG_COLOR
+from classes.constants import WIDTH, HEIGHT, BG_COLOR, FIRST_PLAYER_COLOR, SECOND_PLAYER_COLOR
 from classes.game import Game, GameBot
 from classes.button import Button
 from classes.start_menu import Menu
 from pygame import Color
 
 pygame.init()
-#win = pygame.display.set_mode((WIDTH, HEIGHT))
+win = pygame.display.set_mode((WIDTH, HEIGHT))
 
-win = pygame.display.set_mode((0, 0), pygame.FULLSCREEN)
+#win = pygame.display.set_mode((0, 0), pygame.FULLSCREEN)
 surface = pygame.Surface((WIDTH, HEIGHT), pygame.SRCALPHA)
 pygame.display.set_caption('Hex')
 
@@ -29,7 +29,7 @@ def main_menu():
         Button((WIDTH/2-100, HEIGHT/2+250), 200, 50, "Quit", quit_game)
     ]
     menu = Menu(buttons, win)
-    menu.display_menu()
+    menu.display_menu(win)
 
 
 def sub_menu1():
@@ -40,7 +40,7 @@ def sub_menu1():
         Button((WIDTH / 2 - 100, HEIGHT / 2 + 150), 200, 50, "Back", main_menu, -1),
     ]
     menu = Menu(buttons, win)
-    menu.display_menu()
+    menu.display_menu(win)
 
 
 def draw_pause():
@@ -60,6 +60,7 @@ def start_game(game_mod):
     run = True
     pause = False
     restart, menu = None, None
+    cord = False
     while run:
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
@@ -82,6 +83,11 @@ def start_game(game_mod):
             if event.type == pygame.MOUSEBUTTONUP:
                 pos = pygame.mouse.get_pos()
                 game.update_mouse(pos)
+            #  draw circle on hexagon when mouse in on top
+            if not game.game_ended:
+                color = FIRST_PLAYER_COLOR[0] if game.player1_turn else SECOND_PLAYER_COLOR[0]
+                cord = game.board.highlight_hex_cell(win, color, cord)
+
             game.board.back_button.clicked(event)
             game.board.back_button.draw(win)
         pygame.display.flip()

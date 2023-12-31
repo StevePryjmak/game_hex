@@ -11,3 +11,7 @@ BTN_COLOR = (0, 120, 215)
 HOVER_COLOR = (0, 150, 255)
 TEXT_COLOR = (255, 255, 255)
 FONT = pygame.font.SysFont('Arial', 25)
+
+# board and player constants
+FIRST_PLAYER_COLOR = (255, 0, 0), 'Red'
+SECOND_PLAYER_COLOR = (0, 0, 255), 'Blue'

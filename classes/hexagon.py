@@ -26,8 +26,6 @@ class Hexagon:
         return points
 
     def clicked(self, pos):
-        if self.used:
-            return False
         is_odd = False
 
         for (x1, y1), (x2, y2) in zip(self.points, self.points[1:] + [self.points[0]]):
@@ -37,11 +35,15 @@ class Hexagon:
                 if x1 + (pos[1] - y1) / (y2 - y1) * (x2 - x1) < pos[0]:
                     is_odd = not is_odd
 
+        return is_odd
+
+    def click_and_block(self, pos):
+        if self.used:
+            return False
+        is_odd = self.clicked(pos)
         if is_odd:
             self.used = True
         return is_odd
-
-
 def example_hexagon():
     import sys
     pygame.init()

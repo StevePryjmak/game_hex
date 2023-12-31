@@ -1,6 +1,6 @@
 import pygame
 from classes.hexagon import Hexagon
-from classes.constants import WIDTH, HEIGHT
+from classes.constants import WIDTH, HEIGHT, FIRST_PLAYER_COLOR, SECOND_PLAYER_COLOR
 import math
 from itertools import product
 from classes.button import Button
@@ -52,16 +52,18 @@ class Board:
 
     def draw_board(self, win):
         win.fill((0, 0, 0))
+        background_image = pygame.image.load("images/background_img3.jpg")
+        background_image = pygame.transform.scale(background_image, (WIDTH, HEIGHT))
+        win.blit(background_image, (0, 0))
         self.back_button.draw(win)
-        pygame.draw.polygon(win, (0, 0, 255), self.polygon_points, 0)
+        pygame.draw.polygon(win, SECOND_PLAYER_COLOR[0], self.polygon_points, 0)
         self.polygon_points[-1], self.polygon_points[-2] = self.polygon_points[-2], self.polygon_points[-1]
-        pygame.draw.polygon(win, (255, 255, 0), self.polygon_points, 0)
+
+        pygame.draw.polygon(win, FIRST_PLAYER_COLOR[0], self.polygon_points, 0)
         self.polygon_points[-1], self.polygon_points[-2] = self.polygon_points[-2], self.polygon_points[-1]
         for i, j in product(range(11), repeat=2):
             self.shadow_hex[i][j].draw(win)
             self.hex_cells[i][j].draw(win)
-
-
 
     def get_hex_cords(self, position):
         for row_index in range(0, 11):
@@ -80,3 +82,23 @@ class Board:
                         return i, j
                 return -1, False
         return -1, False
+
+    def highlight_hex_cell(self, window, color, previous_pointer):
+        current_row, current_column = self.get_hex_cords(pygame.mouse.get_pos())
+
+        # Save the previous pointer if the cursor is outside the hex grid
+        if current_row == -1:
+            if previous_pointer:
+                self.hex_cells[previous_pointer[0]][previous_pointer[1]].draw(window)
+            return previous_pointer
+
+        # Highlighting the current cell
+        current_cell = self.hex_cells[current_row][current_column]
+        pygame.draw.circle(window, color, current_cell.center, 0.3 * current_cell.height)
+
+        # Redrawing the previously highlighted cell to remove highlight
+        if previous_pointer and (current_row, current_column) != previous_pointer:
+            self.hex_cells[previous_pointer[0]][previous_pointer[1]].draw(window)
+
+        return current_row, current_column
+

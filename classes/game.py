@@ -4,6 +4,7 @@ from classes.board import Board
 from classes.checking_for_winner import Graph
 import time
 import random
+from classes.constants import FIRST_PLAYER_COLOR, SECOND_PLAYER_COLOR
 
 
 class Game:
@@ -44,7 +45,7 @@ class Game:
         if not self.game_ended:  # and self.game_started
 
             i, j = self.board.get_hex_cords(pos)
-            if i == -1:
+            if i == -1 or self.board.hex_cells[i][j].used:
                 return False
             self.handle_move(i, j)
             return True
@@ -54,7 +55,7 @@ class Game:
         # Update cell color on the current move.
         cell = self.board.hex_cells[i][j]
         cell.used = True
-        cell.color, cell.owner = ((255, 255, 0), 'Yellow') if self.player1_turn else ((0, 0, 255), 'Blue')
+        cell.color, cell.owner = FIRST_PLAYER_COLOR if self.player1_turn else SECOND_PLAYER_COLOR
 
         # Check for a winner and update the game state.
         graph = Graph(self.board.hex_cells, 1 if self.player1_turn else 2)
@@ -82,7 +83,7 @@ class Game:
     def animate_winner(self, graph):
         """Animate the winning path by flashing the cells."""
         for k in range(6):
-            color = (0, 255, 0) if k % 2 == 0 else (255, 255, 0) if graph.color == 1 else (0, 0, 255)
+            color = (0, 255, 0) if k % 2 == 0 else FIRST_PLAYER_COLOR[0] if graph.color == 1 else SECOND_PLAYER_COLOR[0]
             for i, j in graph.wining_cluster:
                 cell = self.board.hex_cells[i][j]
                 cell.color = color
