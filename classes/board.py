@@ -1,16 +1,20 @@
 import pygame
 from classes.hexagon import Hexagon
-from classes.constants import WIDTH, HEIGHT
+from classes.constants import WIDTH, HEIGHT, FIRST_PLAYER_COLOR, SECOND_PLAYER_COLOR
 import math
 from itertools import product
+from classes.button import Button
 
 
 class Board:
-    def __init__(self):
+    def __init__(self, revert_move):
         self.hex_cells = []
+        self.shadow_hex = []
         self.size = ((min(HEIGHT, WIDTH) * 0.9) / math.cos(math.radians(30))) / 22.5
         self.first_hex_center_x, self.first_hex_center_y = self.calculate_first_hexagon_center()
         self.polygon_points = self.calculate_polygon_points()
+        self.back_button = Button((0, HEIGHT*0.9), WIDTH*0.1, HEIGHT*0.1, 'Back', revert_move)
+        self.create_hex_cells()
 
     def calculate_first_hexagon_center(self):
         center_x = WIDTH / 2 - 15.5 * self.size
@@ -31,23 +35,35 @@ class Board:
         ]
         return polygon_points
 
-    def draw_board(self, win):
-        pygame.draw.polygon(win, (0, 0, 255), self.polygon_points, 0)
-        self.polygon_points[-1], self.polygon_points[-2] = self.polygon_points[-2], self.polygon_points[-1]
-        pygame.draw.polygon(win, (255, 255, 0), self.polygon_points, 0)
-
+    def create_hex_cells(self):
         for j in range(0, 11):
             center_y = self.first_hex_center_y + j * (self.size * 2) * math.cos(math.radians(30))
-            iterable_list = []
+            iterable_list_hexes = []
+            iterable_list_shadow_hexes = []
             for i in range(0, 11):
                 center_x = self.first_hex_center_x + (2 * i + j) * self.size
                 basic_hex = Hexagon((center_x, center_y), self.size, (128, 128, 128))
-                basic_hex.draw(win)
-                basic_hex = Hexagon((center_x, center_y), self.size*0.85, (255, 255, 255))
-                iterable_list.append(basic_hex)
-                basic_hex.draw(win)
+                iterable_list_shadow_hexes.append(basic_hex)
+                basic_hex = Hexagon((center_x, center_y), self.size*0.95, (255, 255, 255))
+                iterable_list_hexes.append(basic_hex)
 
-            self.hex_cells.append(iterable_list)
+            self.hex_cells.append(iterable_list_hexes)
+            self.shadow_hex.append(iterable_list_shadow_hexes)
+
+    def draw_board(self, win):
+        win.fill((0, 0, 0))
+        background_image = pygame.image.load("images/background_img3.jpg")
+        background_image = pygame.transform.scale(background_image, (WIDTH, HEIGHT))
+        win.blit(background_image, (0, 0))
+        self.back_button.draw(win)
+        pygame.draw.polygon(win, SECOND_PLAYER_COLOR[0], self.polygon_points, 0)
+        self.polygon_points[-1], self.polygon_points[-2] = self.polygon_points[-2], self.polygon_points[-1]
+
+        pygame.draw.polygon(win, FIRST_PLAYER_COLOR[0], self.polygon_points, 0)
+        self.polygon_points[-1], self.polygon_points[-2] = self.polygon_points[-2], self.polygon_points[-1]
+        for i, j in product(range(11), repeat=2):
+            self.shadow_hex[i][j].draw(win)
+            self.hex_cells[i][j].draw(win)
 
     def get_hex_cords(self, position):
         for row_index in range(0, 11):
@@ -57,8 +73,6 @@ class Board:
                 possible_rows = ([row_index + 1] if row_index + 1 < 11 else []) + [row_index]
                 column_distance = (position[0] - (hex_cell.center[0] - hex_cell.height)) / (2 * self.size)
 
-                if column_distance < 0 or column_distance > 11:
-                    return -1, False
                 possible_columns = (
                                        [int(column_distance) - 1] if 0 <= int(column_distance) - 1 <= 10 else []
                                    ) + [int(column_distance)] if 0 <= int(column_distance) <= 10 else []
@@ -68,3 +82,23 @@ class Board:
                         return i, j
                 return -1, False
         return -1, False
+
+    def highlight_hex_cell(self, window, color, previous_pointer):
+        current_row, current_column = self.get_hex_cords(pygame.mouse.get_pos())
+
+        # Save the previous pointer if the cursor is outside the hex grid
+        if current_row == -1:
+            if previous_pointer:
+                self.hex_cells[previous_pointer[0]][previous_pointer[1]].draw(window)
+            return previous_pointer
+
+        # Highlighting the current cell
+        current_cell = self.hex_cells[current_row][current_column]
+        pygame.draw.circle(window, color, current_cell.center, 0.3 * current_cell.height)
+
+        # Redrawing the previously highlighted cell to remove highlight
+        if previous_pointer and (current_row, current_column) != previous_pointer:
+            self.hex_cells[previous_pointer[0]][previous_pointer[1]].draw(window)
+
+        return current_row, current_column
+

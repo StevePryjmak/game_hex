@@ -9,11 +9,11 @@ class Hexagon:
         self.color = color
         self.height = size
         self.used = False
-        self.occupated_by = None  # 'Green' -first player 'Red' -second player
+        self.owner = None
+        self.points = self.get_points()
 
     def draw(self, win):
-        points = self.get_points()
-        pygame.draw.polygon(win, self.color, points, 0)
+        pygame.draw.polygon(win, self.color, self.points, 0)
 
     def get_points(self):
         points = []
@@ -26,23 +26,24 @@ class Hexagon:
         return points
 
     def clicked(self, pos):
-        if self.used:
-            return False
-        points = self.get_points()
         is_odd = False
 
-        for (x1, y1), (x2, y2) in zip(points, points[1:] + [points[0]]):
+        for (x1, y1), (x2, y2) in zip(self.points, self.points[1:] + [self.points[0]]):
             if ((y1 < pos[1] and y2 >= pos[1]) or (y2 < pos[1] and y1 >= pos[1]) and
                     (x1 <= pos[0] or x2 <= pos[0])):
                 # ray casting algorithm
                 if x1 + (pos[1] - y1) / (y2 - y1) * (x2 - x1) < pos[0]:
                     is_odd = not is_odd
 
+        return is_odd
+
+    def click_and_block(self, pos):
+        if self.used:
+            return False
+        is_odd = self.clicked(pos)
         if is_odd:
             self.used = True
         return is_odd
-
-
 def example_hexagon():
     import sys
     pygame.init()
