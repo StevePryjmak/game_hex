@@ -1,5 +1,5 @@
 import pygame
-from classes.start_menu import Menu
+from classes.start_menu import Menu, GameEndMenu
 from classes.board import Board
 from classes.checking_for_winner import Graph
 import time
@@ -63,12 +63,14 @@ class Game:
         self.player1_turn = not self.player1_turn
         if graph.winner:
             self.game_ended = True
-            self.animate_winner(graph)
+#            self.animate_winner(graph)
         pygame.display.flip()
 
     def revert_move(self, pos):
         if not self.board.back_button.rect.collidepoint(pos) or not self.moves:
             return False, None
+        if self.game_ended:
+            self.board.draw_board(self.win)
         self.game_ended = False  # I know what I must to add, just remainder
         i, j = self.moves[-1]
         cell = self.board.hex_cells[i][j]
@@ -80,17 +82,21 @@ class Game:
         self.moves.pop()
         return True, (i, j)
 
-    def animate_winner(self, graph):
+    def animate_winner(self, graph, color):
         """Animate the winning path by flashing the cells."""
-        for k in range(6):
-            color = (0, 255, 0) if k % 2 == 0 else FIRST_PLAYER_COLOR[0] if graph.color == 1 else SECOND_PLAYER_COLOR[0]
-            for i, j in graph.wining_cluster:
-                cell = self.board.hex_cells[i][j]
-                cell.color = color
-                cell.draw(self.win)
-            pygame.display.flip()
-            time.sleep(0.35)
+#        for k in range(6):
+#            color = (0, 255, 0) if k % 2 == 0 else FIRST_PLAYER_COLOR[0] if graph.color == 1 else SECOND_PLAYER_COLOR[0]
+        for i, j in graph.wining_cluster:
+            cell = self.board.hex_cells[i][j]
+            cell.color = color
+            cell.draw(self.win)
+#            time.sleep(0.35)
 
+    # def draw_end_menu(self, infinite):
+    #     buttons = [self.board.back_button]
+    #     menu = GameEndMenu(buttons, self.win, infinite)
+    #     menu.display_menu()
+    #     pass
 
 
 class GameBot(Game):
@@ -103,14 +109,34 @@ class GameBot(Game):
         # @TODO add function which chose move for bot
         if move_made and not self.game_ended:
             self.empty_places.remove(self.moves[-1])
-            random_element = random.choice(self.empty_places)
-            i, j = random_element
-            self.handle_move(i, j)
-            self.empty_places.remove(random_element)
+            self.make_random_move()
+
+    def make_random_move(self):
+        random_element = random.choice(self.empty_places)
+        i, j = random_element
+        self.handle_move(i, j)
+        self.empty_places.remove(random_element)
 
     def revert_move(self, pos):
-        n = 1 if self.game_ended and not self.player1_turn else 2
+        n = self.how_much_moves_revert()
         for i in range(n):
             result, coordinate = super().revert_move(pos)
             if result:
                 self.empty_places.append(coordinate)
+
+    def how_much_moves_revert(self):
+        return 1 if self.game_ended and not self.player1_turn else 2
+
+
+
+class GameBotFirst(GameBot):
+    def __init__(self, win):
+        super().__init__(win)
+        self.make_random_move()
+
+    def how_much_moves_revert(self):
+        if len(self.moves) == 1:
+            return 0
+        elif len(self.moves) == 2:
+            return 1
+        return 1 if self.game_ended and self.player1_turn else 2
