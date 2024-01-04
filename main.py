@@ -2,10 +2,12 @@ import time
 
 import pygame
 import sys
-from classes.constants import WIDTH, HEIGHT, BG_COLOR, FIRST_PLAYER_COLOR, SECOND_PLAYER_COLOR, FONT, TEXT_COLOR
+from classes.constants import WIDTH, HEIGHT, BG_COLOR, FIRST_PLAYER_COLOR, SECOND_PLAYER_COLOR, FONT, TEXT_COLOR, FPS
+from classes.constants import blit_background
 from classes.game import Game, GameBot, GameBotFirst
+from classes.network import Server, Client
 from classes.button import Button
-from classes.start_menu import Menu, GameEndMenu
+from classes.start_menu import Menu, GameEndMenu, SelectNetworkMenu
 from pygame import Color
 from classes.hexagon import Hexagon
 
@@ -15,6 +17,8 @@ win = pygame.display.set_mode((WIDTH, HEIGHT))
 #win = pygame.display.set_mode((0, 0), pygame.FULLSCREEN)
 surface = pygame.Surface((WIDTH, HEIGHT), pygame.SRCALPHA)
 pygame.display.set_caption('Hex')
+clock = pygame.time.Clock()
+
 
 
 def quit_game():
@@ -36,7 +40,7 @@ def main_menu():
 def sub_menu1():
     buttons = [
         Button((WIDTH / 2 - 100, HEIGHT / 2 - 50), 200, 50, "Play on 1 device", start_game, Game),
-        Button((WIDTH / 2 - 100, HEIGHT / 2 + 50), 200, 50, "Play on different devices", main_menu, -1),
+        Button((WIDTH / 2 - 100, HEIGHT / 2 + 50), 200, 50, "Play on different devices", select_mod,),
         # Second button not working jet
         Button((WIDTH / 2 - 100, HEIGHT / 2 + 150), 200, 50, "Back", main_menu, -1),
     ]
@@ -57,9 +61,7 @@ def draw_pause():
 
 
 def select_color():
-    bg_image = pygame.image.load("images/background_img3.jpg")
-    bg_image = pygame.transform.scale(bg_image, (WIDTH, HEIGHT))
-    win.blit(bg_image, (0, 0))
+    blit_background(win)
 
     instruction_text = FONT.render(
         f'Choose color: {FIRST_PLAYER_COLOR[1]} goes first, {SECOND_PLAYER_COLOR[1]} goes second', True, TEXT_COLOR)
@@ -132,9 +134,86 @@ def start_game(game_mode):
             game.board.back_button.draw(win)
 
         pygame.display.flip()
-
+        clock.tick(FPS)
     pygame.quit()
     sys.exit()
+
+def select_mod():
+    buttons = [
+        Button((WIDTH / 2 - 100, HEIGHT / 2 - 50), 200, 50, "Server", play_on_2_devises_server),
+        Button((WIDTH / 2 - 100, HEIGHT / 2 + 50), 200, 50, "Client", play_on_2_devises_client)
+    ]
+    menu = SelectNetworkMenu(buttons, win)
+    menu.display_menu()
+
+
+
+def play_on_2_devises_server():
+    server = Server(win)
+    try:
+        running = True
+        while running:
+            for event in pygame.event.get():
+                if event.type == pygame.QUIT:
+                    running = False
+                    server.shutdown_event.set()  # Signal all threads to shut down
+                if not server.connection:
+                    pass
+                elif event.type == pygame.MOUSEBUTTONUP and not server.waiting_for_msg: # and server.connection
+                    pos = pygame.mouse.get_pos()
+                    print(pos)
+                    if server.game.update_mouse(pos):
+                        message = f"{pos}"
+                        server.connection.sendall(message.encode())
+                        server.waiting_for_msg = True
+
+            pygame.display.flip()
+            clock.tick(FPS)
+
+    except KeyboardInterrupt:
+        # Handle the CTRL+C interrupt
+        running = False
+        server.shutdown_event.set()
+
+    finally:
+        # Clean up on close
+        if server.connection:
+            server.connection.close()
+        server.server_socket.close()
+        pygame.quit()
+
+def play_on_2_devises_client():
+    client = Client(win)
+    try:
+        running = True
+        while running:
+            for event in pygame.event.get():
+                if event.type == pygame.QUIT:
+                    running = False
+                    client.shutdown_event.set()  # Signal all threads to shutdown
+                if not client.client_socket:
+                    pass
+                elif event.type == pygame.MOUSEBUTTONUP and not client.waiting_for_msg:
+                    pos = pygame.mouse.get_pos()
+                    print(pos)
+                    if client.game.update_mouse(pos):
+                        message = f"{pos}"
+                        client.client_socket.sendall(message.encode())
+                        client.waiting_for_msg = True
+            pygame.display.flip()
+            clock.tick(FPS)
+
+    except KeyboardInterrupt:
+        # Handle the CTRL+C interrupt
+        running = False
+        client.shutdown_event.set()
+
+    finally:
+        # Clean up on close
+        client.shutdown_event.set()
+        if client.client_socket:
+            client.client_socket.close()
+        pygame.quit()
 
 
 if __name__ == '__main__':
