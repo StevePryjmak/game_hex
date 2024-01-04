@@ -10,7 +10,7 @@ BG_COLOR = (50, 50, 50)
 BTN_COLOR = (0, 120, 215)
 HOVER_COLOR = (0, 150, 255)
 TEXT_COLOR = (255, 255, 255)
-FONT = pygame.font.SysFont('Arial', 25)
+FONT = pygame.font.SysFont('8-BIT WONDER.TTF', 30)
 
 # board and player constants
 FIRST_PLAYER_COLOR = (255, 0, 0), 'Red'

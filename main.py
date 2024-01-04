@@ -89,8 +89,7 @@ def select_color():
 
 
 def start_game(game_mode):
-    game = game_mode(win) #  Game(win) if game_mode == 'Game' else GameBot(win)
-#    game.player1_turn = color
+    game = game_mode(win)
     run, pause, cord = True, False, False
     restart, menu = None, None
     while run:
