@@ -7,13 +7,13 @@ def nothing():
 
 
 class Button:
-    def __init__(self, pos, width, height, text='', funk=nothing, arguments=-1, color=BTN_COLOR, border_radius=-1):
+    def __init__(self, pos, width, height, text='', funk=nothing, arguments=-1, color=BTN_COLOR, border_radius=-1, enabled=True):
         self.color = color
         self.x, self.y = pos
         self.width = width
         self.height = height
         self.text = text
-#        self.enabled = enabled
+        self.enabled = enabled
         self.rect = pygame.Rect(self.x, self.y, self.width, self.height)
         self.border_radius = int(min(width, height)/2 if border_radius == -1 else border_radius)
         self.func_to_execute_after_button_was_clicked = funk
@@ -34,15 +34,6 @@ class Button:
         else:
             self.color = BTN_COLOR  # Change back to original color
         return False
-
-
-    # def create_new_menu_after_button_was_clicked(self):
-    #     buttons = [
-    #
-    #     ]
-    #
-    # def toggle_state(self):
-    #     self.enabled = not self.enabled
 
     def execute_funk(self):
         if self.funk_arguments == -1:

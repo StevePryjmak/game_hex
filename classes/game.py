@@ -10,39 +10,19 @@ from classes.constants import FIRST_PLAYER_COLOR, SECOND_PLAYER_COLOR
 class Game:
     def __init__(self, win):
         self.win = win
-#        self.menu = Menu()
-#        self.start_menu()
-#        self.start_game = False
         self.board = Board(self.revert_move)
         self.player1_turn = True
-#        self.game_started = False
         self.game_ended = False
         self.moves = []
         self.start_game()
 
     def start_game(self):
         self.board.draw_board(self.win)
-#        self.game_started = True
-        pass
 
     def update_mouse(self, pos):
-        # Check if the start button is clicked and initiate the game.
-        # It might be a better approach to create a dedicated menu outside of the game class.
-        # Consider designing a menu system where the game initializes when the start button is clicked,
-        # and add separate buttons for different game modes
-
-        # self.start_game = self.menu.start_button.clicked(pos)
-        # if self.start_game:
-        #     self.menu.start_button.toggle_state()
-        #     self.board.draw_board(self.win)
-        #     pygame.display.flip()
-        #     self.start_game = False
-        #     self.game_started = True
-        #     return False
-
         self.revert_move(pos)
 
-        if not self.game_ended:  # and self.game_started
+        if not self.game_ended:
 
             i, j = self.board.get_hex_cords(pos)
             if i == -1 or self.board.hex_cells[i][j].used:
@@ -63,7 +43,6 @@ class Game:
         self.player1_turn = not self.player1_turn
         if graph.winner:
             self.game_ended = True
-#            self.animate_winner(graph)
         pygame.display.flip()
 
     def revert_move(self, pos):
@@ -71,7 +50,7 @@ class Game:
             return False, None
         if self.game_ended:
             self.board.draw_board(self.win)
-        self.game_ended = False  # I know what I must to add, just remainder
+        self.game_ended = False
         i, j = self.moves[-1]
         cell = self.board.hex_cells[i][j]
         cell.used, cell.color, cell.owner = False, (255, 255, 255), None
@@ -84,19 +63,10 @@ class Game:
 
     def animate_winner(self, graph, color):
         """Animate the winning path by flashing the cells."""
-#        for k in range(6):
-#            color = (0, 255, 0) if k % 2 == 0 else FIRST_PLAYER_COLOR[0] if graph.color == 1 else SECOND_PLAYER_COLOR[0]
         for i, j in graph.wining_cluster:
             cell = self.board.hex_cells[i][j]
             cell.color = color
             cell.draw(self.win)
-#            time.sleep(0.35)
-
-    # def draw_end_menu(self, infinite):
-    #     buttons = [self.board.back_button]
-    #     menu = GameEndMenu(buttons, self.win, infinite)
-    #     menu.display_menu()
-    #     pass
 
 
 class GameBot(Game):
@@ -126,7 +96,6 @@ class GameBot(Game):
 
     def how_much_moves_revert(self):
         return 1 if self.game_ended and not self.player1_turn else 2
-
 
 
 class GameBotFirst(GameBot):
