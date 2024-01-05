@@ -3,17 +3,15 @@ from classes.hexagon import Hexagon
 from classes.constants import WIDTH, HEIGHT, FIRST_PLAYER_COLOR, SECOND_PLAYER_COLOR, blit_background
 import math
 from itertools import product
-from classes.button import Button
 
 
 class Board:
-    def __init__(self, revert_move):
+    def __init__(self):
         self.hex_cells = []
         self.shadow_hex = []
         self.size = ((min(HEIGHT, WIDTH) * 0.9) / math.cos(math.radians(30))) / 22.5
         self.first_hex_center_x, self.first_hex_center_y = self.calculate_first_hexagon_center()
         self.polygon_points = self.calculate_polygon_points()
-        self.back_button = Button((0, HEIGHT*0.9), WIDTH*0.1, HEIGHT*0.1, 'Back', revert_move)
         self.create_hex_cells()
 
     def calculate_first_hexagon_center(self):
@@ -53,7 +51,6 @@ class Board:
     def draw_board(self, win):
         win.fill((0, 0, 0))
         blit_background(win)
-        self.back_button.draw(win)
         pygame.draw.polygon(win, SECOND_PLAYER_COLOR[0], self.polygon_points, 0)
         self.polygon_points[-1], self.polygon_points[-2] = self.polygon_points[-2], self.polygon_points[-1]
 
@@ -81,8 +78,8 @@ class Board:
                 return -1, False
         return -1, False
 
-    def highlight_hex_cell(self, window, color, previous_pointer):
-        current_row, current_column = self.get_hex_cords(pygame.mouse.get_pos())
+    def highlight_hex_cell(self, window, color, previous_pointer, pos):
+        current_row, current_column = self.get_hex_cords(pos)
 
         # Save the previous pointer if the cursor is outside the hex grid
         if current_row == -1:
@@ -99,4 +96,3 @@ class Board:
             self.hex_cells[previous_pointer[0]][previous_pointer[1]].draw(window)
 
         return current_row, current_column
-

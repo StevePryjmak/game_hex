@@ -1,9 +1,6 @@
 import pygame
-from classes.start_menu import Menu, GameEndMenu
 from classes.board import Board
 from classes.checking_for_winner import Graph
-import time
-from classes.button import Button
 import random
 from classes.constants import FIRST_PLAYER_COLOR, SECOND_PLAYER_COLOR
 
@@ -11,17 +8,21 @@ from classes.constants import FIRST_PLAYER_COLOR, SECOND_PLAYER_COLOR
 class Game:
     def __init__(self, win):
         self.win = win
-        self.board = Board(self.revert_move)
+        self.board = Board()
         self.player1_turn = True
         self.game_ended = False
         self.moves = []
         self.start_game()
+        self.coordinates = False
 
     def start_game(self):
         self.board.draw_board(self.win)
 
+    def draw_dot(self, pos):
+        color = FIRST_PLAYER_COLOR[0] if self.player1_turn else SECOND_PLAYER_COLOR[0]
+        self.coordinates = self.board.highlight_hex_cell(self.win, color, self.coordinates, pos)
+
     def update_mouse(self, pos):
-        self.revert_move(pos)
 
         if not self.game_ended:
 
@@ -47,7 +48,7 @@ class Game:
         pygame.display.flip()
 
     def revert_move(self, pos):
-        if not self.board.back_button.rect.collidepoint(pos) or not self.moves:
+        if not self.moves:
             return False, None
         if self.game_ended:
             self.board.draw_board(self.win)
