@@ -1,24 +1,20 @@
-import time
-
 import pygame
 import sys
-from classes.constants import WIDTH, HEIGHT, BG_COLOR, FIRST_PLAYER_COLOR, SECOND_PLAYER_COLOR, FONT, TEXT_COLOR, FPS
-from classes.constants import blit_background
+from classes.constants import WIDTH, HEIGHT, FIRST_PLAYER_COLOR, SECOND_PLAYER_COLOR, FONT, TEXT_COLOR, FPS
+from classes.constants import blit_background, BTN_WIDTH, BTN_HEIGHT, BTN_OFFSET
 from classes.game import Game, GameBot, GameBotFirst
 from classes.network import Server, Client
 from classes.button import Button
-from classes.start_menu import Menu, GameEndMenu, SelectNetworkMenu
-from pygame import Color
+from classes.start_menu import Menu, GameEndMenu, SelectNetworkMenu, OpponentAbandonedGameMenu
 from classes.hexagon import Hexagon
 
 pygame.init()
 win = pygame.display.set_mode((WIDTH, HEIGHT))
 
-#win = pygame.display.set_mode((0, 0), pygame.FULLSCREEN)
+#  win = pygame.display.set_mode((0, 0), pygame.FULLSCREEN)
 surface = pygame.Surface((WIDTH, HEIGHT), pygame.SRCALPHA)
 pygame.display.set_caption('Hex')
 clock = pygame.time.Clock()
-
 
 
 def quit_game():
@@ -27,25 +23,28 @@ def quit_game():
 
 
 def main_menu():
+    buttons_x, buttons_y = (WIDTH - BTN_WIDTH) / 2, (HEIGHT - BTN_HEIGHT) / 2
     buttons = [
-        Button((WIDTH/2-100, HEIGHT/2-50), 200, 50, "Play with friend", sub_menu1,),
-        Button((WIDTH/2-100, HEIGHT/2+50), 200, 50, "Play with bot", select_color),
-        Button((WIDTH / 2 - 100, HEIGHT / 2 + 150), 200, 50, "How to play", ),
-        Button((WIDTH/2-100, HEIGHT/2+250), 200, 50, "Quit", quit_game)
+        Button((buttons_x, buttons_y), BTN_WIDTH, BTN_HEIGHT, "Play with friend", friend_game_menu, ),
+        Button((buttons_x, buttons_y + BTN_OFFSET), BTN_WIDTH, BTN_HEIGHT, "Play with bot", select_color),
+        Button((buttons_x, buttons_y + 2*BTN_OFFSET), BTN_WIDTH, BTN_HEIGHT, "How to play", ),
+        Button((buttons_x, buttons_y + 3*BTN_OFFSET), BTN_WIDTH, BTN_HEIGHT, "Quit", quit_game)
     ]
     menu = Menu(buttons, win)
     menu.display_menu()
+    quit_game()
 
 
-def sub_menu1():
+def friend_game_menu():
+    buttons_x, buttons_y = (WIDTH - BTN_WIDTH) / 2, (HEIGHT - BTN_HEIGHT) / 2
     buttons = [
-        Button((WIDTH / 2 - 100, HEIGHT / 2 - 50), 200, 50, "Play on 1 device", start_game, Game),
-        Button((WIDTH / 2 - 100, HEIGHT / 2 + 50), 200, 50, "Play on different devices", select_mod,),
-        # Second button not working jet
-        Button((WIDTH / 2 - 100, HEIGHT / 2 + 150), 200, 50, "Back", main_menu, -1),
+        Button((buttons_x, buttons_y), BTN_WIDTH, BTN_HEIGHT, "Play on 1 device", start_game, Game),
+        Button((buttons_x, buttons_y + BTN_OFFSET), BTN_WIDTH, BTN_HEIGHT, "Play on 2 devices", select_mod,),
+        Button((buttons_x, buttons_y + 2*BTN_OFFSET), BTN_WIDTH, BTN_HEIGHT, "Back", main_menu,),
     ]
     menu = Menu(buttons, win)
     menu.display_menu()
+    quit_game()
 
 
 def draw_pause():
@@ -88,20 +87,28 @@ def select_color():
             if event.type == pygame.MOUSEBUTTONUP and player_two_hex.clicked(pygame.mouse.get_pos()):
                 return start_game(GameBotFirst)
         pygame.display.flip()
+    quit_game()
 
 
 def start_game(game_mode):
     game = game_mode(win)
     run, pause, cord = True, False, False
     restart, menu = None, None
+    main_buttons = [
+        Button((WIDTH*0.93, 0.02*HEIGHT), 0.05*WIDTH, 0.05*WIDTH, img='images/white-home-icon.png'),
+        Button((0, HEIGHT * 0.85),  HEIGHT * 0.15, HEIGHT * 0.15, img='images/undo1.png')
+    ]
+    for button in main_buttons:
+        button.draw(win)
     while run:
         if game.game_ended:
             #  animate winner and open end_menu
-            buttons = [
-                Button((WIDTH / 2 - 100, HEIGHT / 2 - 50), 200, 50, "Main Menu", main_menu),
-                Button((WIDTH / 2 - 100, HEIGHT / 2 + 50), 200, 50, "Play Again", start_game, game_mode)
+            buttons_x, buttons_y = (WIDTH - BTN_WIDTH) / 2, (HEIGHT - BTN_HEIGHT) / 2
+            end_buttons = [
+                Button((buttons_x, buttons_y), BTN_WIDTH, BTN_HEIGHT, "Main Menu", main_menu),
+                Button((buttons_x, buttons_y + BTN_OFFSET), BTN_WIDTH, BTN_HEIGHT, "Play Again", start_game, game_mode)
             ]
-            end_menu = GameEndMenu(buttons, game)
+            end_menu = GameEndMenu(end_buttons, game, True, main_buttons[1])
             if not end_menu.display_menu():
                 return
         for event in pygame.event.get():
@@ -109,6 +116,14 @@ def start_game(game_mode):
                 run = False
             elif event.type == pygame.KEYDOWN:
                 if event.key == pygame.K_ESCAPE:
+                    pause = not pause
+                    if pause:
+                        restart, menu = draw_pause()
+                    else:
+                        game.board.draw_board(win)
+                    pygame.display.flip()
+            if event.type == pygame.MOUSEBUTTONUP:
+                if main_buttons[0].clicked(event):
                     pause = not pause
                     if pause:
                         restart, menu = draw_pause()
@@ -124,70 +139,96 @@ def start_game(game_mode):
             else:
                 if event.type == pygame.MOUSEBUTTONUP:
                     pos = pygame.mouse.get_pos()
+                    if main_buttons[1].rect.collidepoint(pos):
+                        game.revert_move(pos)
                     game.update_mouse(pos)
 
                 if not game.game_ended:
-                    color = FIRST_PLAYER_COLOR[0] if game.player1_turn else SECOND_PLAYER_COLOR[0]
-                    cord = game.board.highlight_hex_cell(win, color, cord)
+                    game.draw_dot(pygame.mouse.get_pos())
 
-            game.board.back_button.clicked(event)
-            game.board.back_button.draw(win)
+                    main_buttons[1].clicked(event)
+                    for button in main_buttons:
+                        button.draw(win)
 
         pygame.display.flip()
         clock.tick(FPS)
-    pygame.quit()
-    sys.exit()
+    quit_game()
+
 
 def select_mod():
+    buttons_x, buttons_y = (WIDTH - BTN_WIDTH) / 2, (HEIGHT - BTN_HEIGHT) / 2
     buttons = [
-        Button((WIDTH / 2 - 100, HEIGHT / 2 - 50), 200, 50, "Server", play_on_2_devices,'server'),
-        Button((WIDTH / 2 - 100, HEIGHT / 2 + 50), 200, 50, "Client", play_on_2_devices,'client')
+        Button((buttons_x, buttons_y), BTN_WIDTH, BTN_HEIGHT, "Server", play_on_2_devices, 'server'),
+        Button((buttons_x, buttons_y + BTN_OFFSET), BTN_WIDTH, BTN_HEIGHT, "Client", play_on_2_devices, 'client'),
+        Button((buttons_x, buttons_y + 2*BTN_OFFSET), BTN_WIDTH, BTN_HEIGHT, "Back", friend_game_menu)
     ]
     menu = SelectNetworkMenu(buttons, win)
     menu.display_menu()
-
+    quit_game()
 
 
 def play_on_2_devices(mode):
     # Determine if running as server or client based on mode
     device = Server(win) if mode == 'server' else Client(win)
-
     try:
-        cord = False
         running = True
         while running:
+            if device.game and device.game.game_ended:
+                #  animate winner and open end_menu
+                device.shutdown_event.set()
+                buttons_x, buttons_y = (WIDTH - BTN_WIDTH) / 2, (HEIGHT - BTN_HEIGHT) / 2
+                end_buttons = [
+                    Button((buttons_x, buttons_y), BTN_WIDTH, BTN_HEIGHT, "Main Menu", main_menu),
+                    Button((buttons_x, buttons_y + BTN_OFFSET), BTN_WIDTH, BTN_HEIGHT, "Leave Game", quit_game)
+                ]
+                end_menu = GameEndMenu(end_buttons, device.game)
+                end_menu.display_menu()
+
+            if device.game_aborted:
+                raise ConnectionAbortedError
             for event in pygame.event.get():
                 if event.type == pygame.QUIT:
                     running = False
                     device.shutdown_event.set()  # Signal all threads to shut down
+                    break
                 if not device.socket:
                     pass
+                elif not device.game:
+                    device.game = Game(win)
                 elif event.type == pygame.MOUSEBUTTONUP and not device.waiting_for_msg:
                     pos = pygame.mouse.get_pos()
-                    print(pos)
                     if device.game.update_mouse(pos):
                         message = f"{pos}"
                         device.socket.sendall(message.encode())
                         device.waiting_for_msg = True
                 elif not device.waiting_for_msg and not device.game.game_ended:
-                    color = FIRST_PLAYER_COLOR[0] if device.game.player1_turn else SECOND_PLAYER_COLOR[0]
-                    cord = device.game.board.highlight_hex_cell(win, color, cord)
-
+                    pos = pygame.mouse.get_pos()
+                    device.game.draw_dot(pos)
+                    message = f"N{pos}"
+                    device.socket.sendall(message.encode())
             pygame.display.flip()
             clock.tick(FPS)
 
     except KeyboardInterrupt:
         # Handle the CTRL+C interrupt
-        running = False
         device.shutdown_event.set()
-
+    except ConnectionAbortedError:
+        #  pass for now but not forgot to add menu and return to main menu option
+        buttons_x, buttons_y = (WIDTH - BTN_WIDTH) / 2, (HEIGHT - BTN_HEIGHT) / 2
+        buttons = [
+            Button((buttons_x, buttons_y), BTN_WIDTH, BTN_HEIGHT, "Main Menu", main_menu),
+            Button((buttons_x, buttons_y + BTN_OFFSET), BTN_WIDTH, BTN_HEIGHT, "Leave Game", quit_game)
+        ]
+        menu = OpponentAbandonedGameMenu(buttons, win)
+        menu.display_menu()
+        print("Abandoned")
     finally:
         # Clean up on close
         if device.socket:
             device.socket.close()
         if mode == 'server':
             device.server_socket.close()
-        pygame.quit()
+        quit_game()
 
 
 if __name__ == '__main__':
