@@ -2,10 +2,12 @@ import time
 
 import pygame
 import sys
-from classes.constants import WIDTH, HEIGHT, BG_COLOR, FIRST_PLAYER_COLOR, SECOND_PLAYER_COLOR, FONT, TEXT_COLOR
+from classes.constants import WIDTH, HEIGHT, BG_COLOR, FIRST_PLAYER_COLOR, SECOND_PLAYER_COLOR, FONT, TEXT_COLOR, FPS
+from classes.constants import blit_background
 from classes.game import Game, GameBot, GameBotFirst
+from classes.network import Server, Client
 from classes.button import Button
-from classes.start_menu import Menu, GameEndMenu
+from classes.start_menu import Menu, GameEndMenu, SelectNetworkMenu
 from pygame import Color
 from classes.hexagon import Hexagon
 
@@ -15,6 +17,8 @@ win = pygame.display.set_mode((WIDTH, HEIGHT))
 #win = pygame.display.set_mode((0, 0), pygame.FULLSCREEN)
 surface = pygame.Surface((WIDTH, HEIGHT), pygame.SRCALPHA)
 pygame.display.set_caption('Hex')
+clock = pygame.time.Clock()
+
 
 
 def quit_game():
@@ -24,7 +28,7 @@ def quit_game():
 
 def main_menu():
     buttons = [
-        Button((WIDTH/2-100, HEIGHT/2-50), 200, 50, "Play with friend", sub_menu1, -1),
+        Button((WIDTH/2-100, HEIGHT/2-50), 200, 50, "Play with friend", sub_menu1,),
         Button((WIDTH/2-100, HEIGHT/2+50), 200, 50, "Play with bot", select_color),
         Button((WIDTH / 2 - 100, HEIGHT / 2 + 150), 200, 50, "How to play", ),
         Button((WIDTH/2-100, HEIGHT/2+250), 200, 50, "Quit", quit_game)
@@ -36,7 +40,7 @@ def main_menu():
 def sub_menu1():
     buttons = [
         Button((WIDTH / 2 - 100, HEIGHT / 2 - 50), 200, 50, "Play on 1 device", start_game, Game),
-        Button((WIDTH / 2 - 100, HEIGHT / 2 + 50), 200, 50, "Play on different devices", main_menu, -1),
+        Button((WIDTH / 2 - 100, HEIGHT / 2 + 50), 200, 50, "Play on different devices", select_mod,),
         # Second button not working jet
         Button((WIDTH / 2 - 100, HEIGHT / 2 + 150), 200, 50, "Back", main_menu, -1),
     ]
@@ -57,9 +61,7 @@ def draw_pause():
 
 
 def select_color():
-    bg_image = pygame.image.load("images/background_img3.jpg")
-    bg_image = pygame.transform.scale(bg_image, (WIDTH, HEIGHT))
-    win.blit(bg_image, (0, 0))
+    blit_background(win)
 
     instruction_text = FONT.render(
         f'Choose color: {FIRST_PLAYER_COLOR[1]} goes first, {SECOND_PLAYER_COLOR[1]} goes second', True, TEXT_COLOR)
@@ -132,9 +134,60 @@ def start_game(game_mode):
             game.board.back_button.draw(win)
 
         pygame.display.flip()
-
+        clock.tick(FPS)
     pygame.quit()
     sys.exit()
+
+def select_mod():
+    buttons = [
+        Button((WIDTH / 2 - 100, HEIGHT / 2 - 50), 200, 50, "Server", play_on_2_devices,'server'),
+        Button((WIDTH / 2 - 100, HEIGHT / 2 + 50), 200, 50, "Client", play_on_2_devices,'client')
+    ]
+    menu = SelectNetworkMenu(buttons, win)
+    menu.display_menu()
+
+
+
+def play_on_2_devices(mode):
+    # Determine if running as server or client based on mode
+    device = Server(win) if mode == 'server' else Client(win)
+
+    try:
+        cord = False
+        running = True
+        while running:
+            for event in pygame.event.get():
+                if event.type == pygame.QUIT:
+                    running = False
+                    device.shutdown_event.set()  # Signal all threads to shut down
+                if not device.socket:
+                    pass
+                elif event.type == pygame.MOUSEBUTTONUP and not device.waiting_for_msg:
+                    pos = pygame.mouse.get_pos()
+                    print(pos)
+                    if device.game.update_mouse(pos):
+                        message = f"{pos}"
+                        device.socket.sendall(message.encode())
+                        device.waiting_for_msg = True
+                elif not device.waiting_for_msg and not device.game.game_ended:
+                    color = FIRST_PLAYER_COLOR[0] if device.game.player1_turn else SECOND_PLAYER_COLOR[0]
+                    cord = device.game.board.highlight_hex_cell(win, color, cord)
+
+            pygame.display.flip()
+            clock.tick(FPS)
+
+    except KeyboardInterrupt:
+        # Handle the CTRL+C interrupt
+        running = False
+        device.shutdown_event.set()
+
+    finally:
+        # Clean up on close
+        if device.socket:
+            device.socket.close()
+        if mode == 'server':
+            device.server_socket.close()
+        pygame.quit()
 
 
 if __name__ == '__main__':

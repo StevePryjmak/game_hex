@@ -1,9 +1,11 @@
 import pygame
 import sys
-from classes.constants import WIDTH, HEIGHT, FIRST_PLAYER_COLOR, SECOND_PLAYER_COLOR
+from classes.constants import WIDTH, HEIGHT, FIRST_PLAYER_COLOR, SECOND_PLAYER_COLOR, blit_background
 from classes.button import Button
-from classes.constants import WIDTH, HEIGHT, BG_COLOR
+from classes.constants import WIDTH, HEIGHT, BG_COLOR, FONT, TEXT_COLOR, FPS
 from classes.checking_for_winner import Graph
+
+clock = pygame.time.Clock()
 
 class Menu:
     def __init__(self, buttons, win):
@@ -12,6 +14,7 @@ class Menu:
 
     def display_menu(self):
         run = True
+        self.draw_menu_background()
         while run:
             for event in pygame.event.get():
                 if event.type == pygame.QUIT:
@@ -21,15 +24,22 @@ class Menu:
                     if button.clicked(event):
                         button.execute_funk()
 
-            self.draw_menu_background()
             for button in self.buttons:
                 button.draw(self.win)
             pygame.display.flip()
+            clock.tick(FPS)
 
-    def draw_menu_background(self,):
-        background_image = pygame.image.load("images/background_img3.jpg")
-        background_image = pygame.transform.scale(background_image, (WIDTH, HEIGHT))
-        self.win.blit(background_image, (0, 0))
+    def draw_menu_background(self):
+        blit_background(self.win)
+
+
+class SelectNetworkMenu(Menu):
+    def draw_menu_background(self):
+        super().draw_menu_background()
+        instruction_text = FONT.render(
+            f'Choose Network Mod: Server goes first, Client goes second', True, TEXT_COLOR)
+        instruction_text_rect = instruction_text.get_rect(center=(WIDTH / 2, HEIGHT / 3))
+        self.win.blit(instruction_text, instruction_text_rect)
 
 class GameEndMenu(Menu):
     def __init__(self, buttons, game):

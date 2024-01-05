@@ -3,6 +3,7 @@ from classes.start_menu import Menu, GameEndMenu
 from classes.board import Board
 from classes.checking_for_winner import Graph
 import time
+from classes.button import Button
 import random
 from classes.constants import FIRST_PLAYER_COLOR, SECOND_PLAYER_COLOR
 
