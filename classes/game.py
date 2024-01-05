@@ -8,11 +8,6 @@ import random
 from classes.constants import FIRST_PLAYER_COLOR, SECOND_PLAYER_COLOR
 
 
-class GameParent:
-    def __init__(self, win):
-        self.win = win
-        self.game_ended = False
-
 class Game:
     def __init__(self, win):
         self.win = win

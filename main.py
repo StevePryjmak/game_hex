@@ -28,7 +28,7 @@ def quit_game():
 
 def main_menu():
     buttons = [
-        Button((WIDTH/2-100, HEIGHT/2-50), 200, 50, "Play with friend", sub_menu1, -1),
+        Button((WIDTH/2-100, HEIGHT/2-50), 200, 50, "Play with friend", sub_menu1,),
         Button((WIDTH/2-100, HEIGHT/2+50), 200, 50, "Play with bot", select_color),
         Button((WIDTH / 2 - 100, HEIGHT / 2 + 150), 200, 50, "How to play", ),
         Button((WIDTH/2-100, HEIGHT/2+250), 200, 50, "Quit", quit_game)
@@ -140,32 +140,38 @@ def start_game(game_mode):
 
 def select_mod():
     buttons = [
-        Button((WIDTH / 2 - 100, HEIGHT / 2 - 50), 200, 50, "Server", play_on_2_devises_server),
-        Button((WIDTH / 2 - 100, HEIGHT / 2 + 50), 200, 50, "Client", play_on_2_devises_client)
+        Button((WIDTH / 2 - 100, HEIGHT / 2 - 50), 200, 50, "Server", play_on_2_devices,'server'),
+        Button((WIDTH / 2 - 100, HEIGHT / 2 + 50), 200, 50, "Client", play_on_2_devices,'client')
     ]
     menu = SelectNetworkMenu(buttons, win)
     menu.display_menu()
 
 
 
-def play_on_2_devises_server():
-    server = Server(win)
+def play_on_2_devices(mode):
+    # Determine if running as server or client based on mode
+    device = Server(win) if mode == 'server' else Client(win)
+
     try:
+        cord = False
         running = True
         while running:
             for event in pygame.event.get():
                 if event.type == pygame.QUIT:
                     running = False
-                    server.shutdown_event.set()  # Signal all threads to shut down
-                if not server.connection:
+                    device.shutdown_event.set()  # Signal all threads to shut down
+                if not device.socket:
                     pass
-                elif event.type == pygame.MOUSEBUTTONUP and not server.waiting_for_msg: # and server.connection
+                elif event.type == pygame.MOUSEBUTTONUP and not device.waiting_for_msg:
                     pos = pygame.mouse.get_pos()
                     print(pos)
-                    if server.game.update_mouse(pos):
+                    if device.game.update_mouse(pos):
                         message = f"{pos}"
-                        server.connection.sendall(message.encode())
-                        server.waiting_for_msg = True
+                        device.socket.sendall(message.encode())
+                        device.waiting_for_msg = True
+                elif not device.waiting_for_msg and not device.game.game_ended:
+                    color = FIRST_PLAYER_COLOR[0] if device.game.player1_turn else SECOND_PLAYER_COLOR[0]
+                    cord = device.game.board.highlight_hex_cell(win, color, cord)
 
             pygame.display.flip()
             clock.tick(FPS)
@@ -173,46 +179,14 @@ def play_on_2_devises_server():
     except KeyboardInterrupt:
         # Handle the CTRL+C interrupt
         running = False
-        server.shutdown_event.set()
+        device.shutdown_event.set()
 
     finally:
         # Clean up on close
-        if server.connection:
-            server.connection.close()
-        server.server_socket.close()
-        pygame.quit()
-
-def play_on_2_devises_client():
-    client = Client(win)
-    try:
-        running = True
-        while running:
-            for event in pygame.event.get():
-                if event.type == pygame.QUIT:
-                    running = False
-                    client.shutdown_event.set()  # Signal all threads to shutdown
-                if not client.client_socket:
-                    pass
-                elif event.type == pygame.MOUSEBUTTONUP and not client.waiting_for_msg:
-                    pos = pygame.mouse.get_pos()
-                    print(pos)
-                    if client.game.update_mouse(pos):
-                        message = f"{pos}"
-                        client.client_socket.sendall(message.encode())
-                        client.waiting_for_msg = True
-            pygame.display.flip()
-            clock.tick(FPS)
-
-    except KeyboardInterrupt:
-        # Handle the CTRL+C interrupt
-        running = False
-        client.shutdown_event.set()
-
-    finally:
-        # Clean up on close
-        client.shutdown_event.set()
-        if client.client_socket:
-            client.client_socket.close()
+        if device.socket:
+            device.socket.close()
+        if mode == 'server':
+            device.server_socket.close()
         pygame.quit()
 
 
