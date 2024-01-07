@@ -2,7 +2,7 @@ import pygame
 import socket
 import threading
 import urllib.request
-from classes.gui.constants import HEIGHT, WIDTH, blit_background, FONT, TEXT_COLOR
+from classes.gui.constants import HEIGHT, WIDTH, FONT, TEXT_COLOR
 
 
 class NetworkEntity:
@@ -42,7 +42,9 @@ class NetworkEntity:
 
     def display_info(self, message):
         try:
-            blit_background(self.win)
+            bg_image = pygame.image.load("images/background_img3.jpg")
+            bg_image = pygame.transform.scale(bg_image, (WIDTH, HEIGHT))
+            self.win.blit(bg_image, (0, 0))
             instruction_text = FONT.render(message, True, TEXT_COLOR)
             instruction_text_rect = instruction_text.get_rect(center=(WIDTH / 2, HEIGHT / 2))
             self.win.blit(instruction_text, instruction_text_rect)

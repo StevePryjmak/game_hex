@@ -1,6 +1,6 @@
 import pygame
 from classes.gui.hexagon import Hexagon
-from classes.gui.constants import WIDTH, HEIGHT, FIRST_PLAYER_COLOR, SECOND_PLAYER_COLOR, blit_background
+from classes.gui.constants import WIDTH, HEIGHT, FIRST_PLAYER_COLOR, SECOND_PLAYER_COLOR
 import math
 from itertools import product
 
@@ -52,7 +52,9 @@ class GuiBoard:
 
     def draw_board(self, win):
         win.fill((0, 0, 0))
-        blit_background(win)
+        bg_image = pygame.image.load("images/background_img3.jpg")
+        bg_image = pygame.transform.scale(bg_image, (WIDTH, HEIGHT))
+        win.blit(bg_image, (0, 0))
         pygame.draw.polygon(win, SECOND_PLAYER_COLOR[0], self.polygon_points, 0)
         self.polygon_points[-1], self.polygon_points[-2] = self.polygon_points[-2], self.polygon_points[-1]
 
