@@ -61,6 +61,7 @@ class GameEndMenu(Menu):
             cell = self.gui_board.hex_cells[i][j]
             cell.color = color
             cell.draw(self.win)
+
     def display_menu(self):
         run = True
         pygame.draw.rect(self.surface, (128, 128, 128, 120), [0, 0, WIDTH, HEIGHT])

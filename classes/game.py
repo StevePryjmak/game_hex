@@ -18,9 +18,9 @@ class Game:
         self.board.cells[i][j] = 1 if self.player1_turn else 2
 
         # Check for a winner and update the game state.
-        graph = WinnerChecker(self.board.cells, 1 if self.player1_turn else 2, True)
+        wins = WinnerChecker(self.board.cells, 1 if self.player1_turn else 2, True)
         self.player1_turn = not self.player1_turn
-        if graph.winner:
+        if wins.winner:
             self.game_ended = True
         return True
 

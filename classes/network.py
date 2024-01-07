@@ -8,7 +8,7 @@ from classes.gui.constants import HEIGHT, WIDTH, blit_background, FONT, TEXT_COL
 class NetworkEntity:
     def __init__(self, win):
         self.win = win
-        self.game = None # Will create game object when needed
+        self.game = None  # Will create game object when needed
         self.gui_board = None
         self.waiting_for_msg = False
         self.host = 'localhost'
@@ -23,8 +23,6 @@ class NetworkEntity:
         self.server_socket.bind((self.host, self.port))
         self.server_socket.listen(1)
         self.server_socket.setblocking(False)
-
-
 
     def attempt_connect(self):
         while not self.shutdown_event.is_set():
@@ -49,13 +47,6 @@ class NetworkEntity:
             instruction_text_rect = instruction_text.get_rect(center=(WIDTH / 2, HEIGHT / 2))
             self.win.blit(instruction_text, instruction_text_rect)
         except pygame.error:
-            # This issue may occur if the client is already waiting, but the server has only just been created.
-            # Consequently, the game begins in a brief period during which the previous window has already closed.
-            # However, the game attempts to execute a blit operation on the previous window
-            # because the function was originally called in the context of the previous window.
-
-            #  #Double comment this issue probably occur because game class was cretin in threading and because of  that
-            #  It created a lot of different bugs
             print('Pygame.error')
 
     def handle_communication(self):
