@@ -1,18 +1,20 @@
 import pygame
-from classes.hexagon import Hexagon
-from classes.constants import WIDTH, HEIGHT, FIRST_PLAYER_COLOR, SECOND_PLAYER_COLOR, blit_background
+from classes.gui.hexagon import Hexagon
+from classes.gui.constants import WIDTH, HEIGHT, FIRST_PLAYER_COLOR, SECOND_PLAYER_COLOR, blit_background
 import math
 from itertools import product
 
 
-class Board:
-    def __init__(self):
+class GuiBoard:
+    def __init__(self, win):
+        self.win = win
         self.hex_cells = []
         self.shadow_hex = []
         self.size = ((min(HEIGHT, WIDTH) * 0.9) / math.cos(math.radians(30))) / 22.5
         self.first_hex_center_x, self.first_hex_center_y = self.calculate_first_hexagon_center()
         self.polygon_points = self.calculate_polygon_points()
         self.create_hex_cells()
+        self.coordinates = False
 
     def calculate_first_hexagon_center(self):
         center_x = WIDTH / 2 - 15.5 * self.size
@@ -96,3 +98,34 @@ class Board:
             self.hex_cells[previous_pointer[0]][previous_pointer[1]].draw(window)
 
         return current_row, current_column
+
+    def update_hex_cell(self, row, column, player1_turn):
+        cell = self.hex_cells[row][column]
+        cell.used = True
+        cell.color, cell.owner = FIRST_PLAYER_COLOR if not player1_turn else SECOND_PLAYER_COLOR
+        cell.draw(self.win)
+
+    def clear_hex_cell(self, row, column):
+        cell = self.hex_cells[row][column]
+        cell.used = False
+        cell.color, cell.owner = (255, 255, 255), None
+        cell.draw(self.win)
+
+    def update_board(self, array):
+        for row, column in product(range(11), repeat=2):
+            cell = self.hex_cells[row][column]
+            # if do in one line, line would be E501 line too long ( > 120 characters)
+            if array[row][column] == 1:
+                cell.used = True
+                cell.color, cell.owner = FIRST_PLAYER_COLOR
+            elif array[row][column] == 2:
+                cell.used = True
+                cell.color, cell.owner = SECOND_PLAYER_COLOR
+            else:
+                cell.used = False
+                cell.color, cell.owner = (255, 255, 255), None
+            cell.draw(self.win)
+
+    def draw_dot(self, pos, player1_turn):
+        color = FIRST_PLAYER_COLOR[0] if player1_turn else SECOND_PLAYER_COLOR[0]
+        self.coordinates = self.highlight_hex_cell(self.win, color, self.coordinates, pos)
