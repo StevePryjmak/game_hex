@@ -20,16 +20,3 @@ BTN_OFFSET = BTN_HEIGHT*1.4
 FIRST_PLAYER_COLOR = (255, 0, 0), 'Red'
 SECOND_PLAYER_COLOR = (0, 0, 255), 'Blue'
 
-
-#  constant image for background
-def blit_background(win):
-    try:
-        # Load and transform the background image
-        bg_image = pygame.image.load("images/background_img3.jpg")
-        bg_image = pygame.transform.scale(bg_image, (WIDTH, HEIGHT))
-
-        # Blit the image onto the window
-        win.blit(bg_image, (0, 0))
-
-    except pygame.error as e:
-        print("Error can't blit the background:", e)

@@ -1,6 +1,6 @@
 import pygame
 import sys
-from classes.gui.constants import FIRST_PLAYER_COLOR, SECOND_PLAYER_COLOR, blit_background
+from classes.gui.constants import FIRST_PLAYER_COLOR, SECOND_PLAYER_COLOR
 from classes.gui.constants import WIDTH, HEIGHT, FONT, TEXT_COLOR, FPS
 from classes.check_for_win import WinnerChecker
 
@@ -39,7 +39,9 @@ class Menu:
             quit_game()
 
     def draw_menu_background(self):
-        blit_background(self.win)
+        bg_image = pygame.image.load("images/background_img3.jpg")
+        bg_image = pygame.transform.scale(bg_image, (WIDTH, HEIGHT))
+        self.win.blit(bg_image, (0, 0))
 
 
 class GameEndMenu(Menu):
@@ -52,8 +54,8 @@ class GameEndMenu(Menu):
         self.gui_board = gui_board
         self.back_button = back_button
         self.revert = revert
-        self.graph = WinnerChecker(self.game.board.cells, 2 if self.game.player1_turn else 1, True)
-        self.color = FIRST_PLAYER_COLOR if self.graph.color == 1 else SECOND_PLAYER_COLOR
+        self.winner_checker = WinnerChecker(self.game.board.cells, 2 if self.game.player1_turn else 1, True)
+        self.color = FIRST_PLAYER_COLOR if self.winner_checker.color == 1 else SECOND_PLAYER_COLOR
 
     def animate_winner(self, graph, color):
         """Animate the winning path by flashing the cells."""
@@ -61,6 +63,7 @@ class GameEndMenu(Menu):
             cell = self.gui_board.hex_cells[i][j]
             cell.color = color
             cell.draw(self.win)
+
     def display_menu(self):
         run = True
         pygame.draw.rect(self.surface, (128, 128, 128, 120), [0, 0, WIDTH, HEIGHT])
@@ -77,7 +80,7 @@ class GameEndMenu(Menu):
                         button.execute_funk()
                 if self.revert:
                     if self.back_button.clicked(event):
-                        self.animate_winner(self.graph, self.color[0])
+                        self.animate_winner(self.winner_checker, self.color[0])
 
                         self.game.revert_move()
                         self.gui_board.update_board(self.game.board.cells)
@@ -86,11 +89,11 @@ class GameEndMenu(Menu):
             if counter < 5000:
                 counter += 1
             if counter % 600 == 0:
-                self.animate_winner(self.graph, self.color[0])
+                self.animate_winner(self.winner_checker, self.color[0])
                 self.draw_menu_background()
             elif counter % 300 == 0:
                 color = (0, 255, 0)
-                self.animate_winner(self.graph, color)
+                self.animate_winner(self.winner_checker, color)
                 self.draw_menu_background()
             pygame.display.flip()
             for button in self.buttons:

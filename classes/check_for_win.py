@@ -67,8 +67,8 @@ def example():
              [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
              [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
              [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]]
-    graph = WinnerChecker(array, 1)
-    print(graph.get_neighbors(0, 1, 1, [(0, 2)]))
+    winner_checker = WinnerChecker(array, 1)
+    print(winner_checker.get_neighbors(0, 1, 1, [(0, 2)]))
 
 
 if __name__ == '__main__':

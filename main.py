@@ -1,7 +1,7 @@
 import pygame
 import sys
 from classes.gui.constants import WIDTH, HEIGHT, FIRST_PLAYER_COLOR, SECOND_PLAYER_COLOR, FONT, TEXT_COLOR, FPS
-from classes.gui.constants import blit_background, BTN_WIDTH, BTN_HEIGHT, BTN_OFFSET
+from classes.gui.constants import BTN_WIDTH, BTN_HEIGHT, BTN_OFFSET
 from classes.game import Game, GameBot, GameBotFirst
 from classes.network import Server, Client
 from classes.gui.button import Button
@@ -75,7 +75,9 @@ def draw_pause():
 
 
 def select_color():
-    blit_background(win)
+    bg_image = pygame.image.load("images/background_img3.jpg")
+    bg_image = pygame.transform.scale(bg_image, (WIDTH, HEIGHT))
+    win.blit(bg_image, (0, 0))
 
     instruction_text = FONT.render(
         f'Choose color: {FIRST_PLAYER_COLOR[1]} goes first, {SECOND_PLAYER_COLOR[1]} goes second', True, TEXT_COLOR)
