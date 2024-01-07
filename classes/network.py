@@ -2,13 +2,14 @@ import pygame
 import socket
 import threading
 import urllib.request
-from classes.constants import HEIGHT, WIDTH, blit_background, FONT, TEXT_COLOR
+from classes.gui.constants import HEIGHT, WIDTH, blit_background, FONT, TEXT_COLOR
 
 
 class NetworkEntity:
     def __init__(self, win):
         self.win = win
-        self.game = None  # Will create game object when needed
+        self.game = None # Will create game object when needed
+        self.gui_board = None
         self.waiting_for_msg = False
         self.host = 'localhost'
         self.port = 55555
@@ -17,17 +18,13 @@ class NetworkEntity:
         self.game_aborted = False
         self.shutdown_event = threading.Event()
 
-    def setup_connection(self, as_server=False):
-        if as_server:
-            self.server_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-            self.server_socket.bind((self.host, self.port))
-            self.server_socket.listen(1)
-            self.server_socket.setblocking(False)
-        else:
-            self.socket = self.attempt_connect()
-            if self.socket:
-                thread = threading.Thread(target=self.handle_communication)
-                thread.start()
+    def setup_connection(self):
+        self.server_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+        self.server_socket.bind((self.host, self.port))
+        self.server_socket.listen(1)
+        self.server_socket.setblocking(False)
+
+
 
     def attempt_connect(self):
         while not self.shutdown_event.is_set():
@@ -36,11 +33,14 @@ class NetworkEntity:
                 temp_socket.connect((self.host, self.port))
                 temp_socket.setblocking(False)
                 print("Connected to server!")
-                return temp_socket
+                self.socket = temp_socket
+                thread1 = threading.Thread(target=self.handle_communication)
+                thread1.start()
+                break
             except socket.error:
                 print("Connection attempt failed, trying again...")
-                if self.shutdown_event.wait(2):
-                    return None
+                # if self.shutdown_event.wait(2):
+                #     return None
 
     def display_info(self, message):
         try:
@@ -69,13 +69,17 @@ class NetworkEntity:
                     if mouse_pos[0] == 'N':
                         mouse_pos = mouse_pos.strip('N()').split(',')
                         mouse_pos = (int(mouse_pos[0]), int(mouse_pos[1]))
-                        self.game.draw_dot(mouse_pos)
+                        self.gui_board.draw_dot(mouse_pos, self.game.player1_turn)
                         continue
                     elif mouse_pos:
                         mouse_pos = mouse_pos.strip('()').split(',')
                         mouse_pos = (int(mouse_pos[0]), int(mouse_pos[1]))
                         print(mouse_pos)
-                        self.game.update_mouse(mouse_pos)
+                        i, j = self.gui_board.get_hex_cords(mouse_pos)
+                        if i == -1 or self.gui_board.hex_cells[i][j].used:
+                            continue
+                        self.game.handle_move(i, j)
+                        self.gui_board.update_board(self.game.board.cells)
                         if self.game.game_ended:
                             self.shutdown_event.set()
                             break
@@ -97,7 +101,7 @@ class Server(NetworkEntity):
         self.wait_for_connection()
 
     def start_server(self):
-        connection_thread = threading.Thread(target=self.setup_connection(as_server=True))
+        connection_thread = threading.Thread(target=self.setup_connection)
         connection_thread.start()
 
     def wait_for_connection(self):
@@ -122,11 +126,13 @@ class Server(NetworkEntity):
 
 
 class Client(NetworkEntity):
-    def __init__(self, win):
+    def __init__(self, win, host=None):
         super().__init__(win)
         self.waiting_for_msg = True
-        self.setup_connection()
+        if host:
+            self.host = host
+        self.start_client()
 
     def start_client(self):
-        connection_thread = threading.Thread(target=self.setup_connection())
+        connection_thread = threading.Thread(target=self.attempt_connect)
         connection_thread.start()

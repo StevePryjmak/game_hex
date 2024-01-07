@@ -1,5 +1,5 @@
 import pygame
-from classes.constants import BTN_COLOR, HOVER_COLOR, FONT, TEXT_COLOR
+from classes.gui.constants import BTN_COLOR, HOVER_COLOR, FONT, TEXT_COLOR
 
 
 def nothing():

@@ -1,8 +1,8 @@
 import pygame
 import sys
-from classes.constants import FIRST_PLAYER_COLOR, SECOND_PLAYER_COLOR, blit_background
-from classes.constants import WIDTH, HEIGHT, FONT, TEXT_COLOR, FPS
-from classes.checking_for_winner import Graph
+from classes.gui.constants import FIRST_PLAYER_COLOR, SECOND_PLAYER_COLOR, blit_background
+from classes.gui.constants import WIDTH, HEIGHT, FONT, TEXT_COLOR, FPS
+from classes.check_for_win import WinnerChecker
 
 clock = pygame.time.Clock()
 
@@ -43,18 +43,29 @@ class Menu:
 
 
 class GameEndMenu(Menu):
-    def __init__(self, buttons, game, revert=False, back_button=None):
-        super().__init__(buttons, game.win)
+    def __init__(self, buttons, game, revert=False, back_button=None, gui_board=None):
+        if gui_board:
+            super().__init__(buttons, gui_board.win)
+        else:
+            super().__init__(buttons, game.win)
         self.game = game
+        self.gui_board = gui_board
         self.back_button = back_button
         self.revert = revert
-        self.graph = Graph(self.game.board.hex_cells, 2 if self.game.player1_turn else 1)
+        self.graph = WinnerChecker(self.game.board.cells, 2 if self.game.player1_turn else 1, True)
         self.color = FIRST_PLAYER_COLOR if self.graph.color == 1 else SECOND_PLAYER_COLOR
 
+    def animate_winner(self, graph, color):
+        """Animate the winning path by flashing the cells."""
+        for i, j in graph.wining_cluster:
+            cell = self.gui_board.hex_cells[i][j]
+            cell.color = color
+            cell.draw(self.win)
     def display_menu(self):
         run = True
         pygame.draw.rect(self.surface, (128, 128, 128, 120), [0, 0, WIDTH, HEIGHT])
         self.win.blit(self.surface, (0, 0))
+        self.draw_menu_background()
         counter = 0
         while run:
             for event in pygame.event.get():
@@ -66,18 +77,20 @@ class GameEndMenu(Menu):
                         button.execute_funk()
                 if self.revert:
                     if self.back_button.clicked(event):
-                        self.game.animate_winner(self.graph, self.color[0])
-                        self.game.revert_move(pygame.mouse.get_pos())
+                        self.animate_winner(self.graph, self.color[0])
+
+                        self.game.revert_move()
+                        self.gui_board.update_board(self.game.board.cells)
                         return True
                     self.back_button.draw(self.win)
             if counter < 5000:
                 counter += 1
             if counter % 600 == 0:
-                self.game.animate_winner(self.graph, self.color[0])
+                self.animate_winner(self.graph, self.color[0])
                 self.draw_menu_background()
             elif counter % 300 == 0:
                 color = (0, 255, 0)
-                self.game.animate_winner(self.graph, color)
+                self.animate_winner(self.graph, color)
                 self.draw_menu_background()
             pygame.display.flip()
             for button in self.buttons:
@@ -115,3 +128,26 @@ class OpponentAbandonedGameMenu(Menu):
             f'Opponent Left', True, TEXT_COLOR)
         instruction_text_rect = instruction_text.get_rect(center=(WIDTH / 2, HEIGHT * 0.37))
         self.win.blit(instruction_text, instruction_text_rect)
+
+
+class ShowInstruction(Menu):
+    def draw_menu_background(self):
+        super().draw_menu_background()
+        instructions = [
+            "Hex Game Rules:",
+            "1. Objective: Connect opposing sides with an unbroken chain.",
+            "2. Players alternate placing one piece on any empty space.",
+            "3. First to connect their sides wins.",
+            "4. No draws: There will always be a winner.",
+            "5. Strategy: Create good blockade!",
+            "6. MainPoint: Just have fun"
+        ]
+        rect = [WIDTH*0.02, HEIGHT*0.09, WIDTH*0.9, HEIGHT*0.65]
+        pygame.draw.rect(self.surface, (0, 0, 0, 200), rect, 0, 10)
+        self.win.blit(self.surface, (0, 0))
+
+        y = HEIGHT*0.12  # Starting Y position of the first line
+        for line in instructions:
+            text = FONT.render(line, True, TEXT_COLOR)
+            self.win.blit(text, (WIDTH*0.04, y))
+            y += HEIGHT*0.09  # Move to the next line

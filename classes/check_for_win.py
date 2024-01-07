@@ -1,13 +1,16 @@
-from classes.constants import FIRST_PLAYER_COLOR, SECOND_PLAYER_COLOR
+from classes.gui.constants import FIRST_PLAYER_COLOR, SECOND_PLAYER_COLOR
 
 
-class Graph:
-    def __init__(self, board, color):
-        self.board = [
-            [1 if cell.owner == FIRST_PLAYER_COLOR[1]
-             else 2 if cell.owner == SECOND_PLAYER_COLOR[1] else 0 for cell in row]
-            for row in board
-        ]
+class WinnerChecker:
+    def __init__(self, board, color, console=False):
+        if console:
+            self.board = board
+        else:
+            self.board = [
+                [1 if cell.owner == FIRST_PLAYER_COLOR[1]
+                 else 2 if cell.owner == SECOND_PLAYER_COLOR[1] else 0 for cell in row]
+                for row in board
+            ]
         self.color = color
         self.winner = False
         if color == 1:
@@ -20,7 +23,6 @@ class Graph:
         if self.is_winner(self.check_positions):
             self.winner, path = True, [self.is_winner(self.check_positions)[1]]
             self.wining_cluster = self.is_winner(path, True)
-            print(f'Winner found {self.color}')
 
     def get_neighbors(self, i, j, color, visited, move_through_all=False):
         neighbors = []
@@ -65,7 +67,7 @@ def example():
              [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
              [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
              [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]]
-    graph = Graph(array, 1)
+    graph = WinnerChecker(array, 1)
     print(graph.get_neighbors(0, 1, 1, [(0, 2)]))
 
 
